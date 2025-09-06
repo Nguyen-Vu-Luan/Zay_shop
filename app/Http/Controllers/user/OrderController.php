@@ -17,6 +17,7 @@ class OrderController extends Controller
     public function checkout(Request $request)
     {
         $selectedIds = $request->input('selected', []);
+        $paymentMethod = $request->input('payment_method');
 
         if (empty($selectedIds)) {
             return back()->with('error', 'Bạn chưa chọn sản phẩm nào để thanh toán.');
@@ -29,7 +30,15 @@ class OrderController extends Controller
 
         $total = $items->sum(fn($item) => $item->product->price * $item->quantity);
 
-        // Tùy bạn xử lý tiếp: tạo đơn hàng, chuyển trang xác nhận, v.v.
+        // Chuyển hướng theo phương thức thanh toán
+        if ($paymentMethod === 'momo') {
+            return redirect()->route('payment.momo', ['amount' => $total]);
+        }
+
+        if ($paymentMethod === 'vnpay') {
+            return redirect()->route('payment.vnpay', ['amount' => $total]);
+        }
+
         return view('checkout.summary', compact('items', 'total'));
     }
 }

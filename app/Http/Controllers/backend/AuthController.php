@@ -46,7 +46,7 @@ class AuthController extends Controller
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
-        return redirect()->route('shop');
+        return back()->with('success', 'Đăng xuất thành công!');
     }
 
     public function redirectToGoogle()

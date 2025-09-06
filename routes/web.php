@@ -72,6 +72,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/cart/{product}', [CartController::class, 'store'])->name('cart.add');
     Route::patch('/cart/{cart}', [CartController::class, 'update'])->name('cart.update');
     Route::delete('/cart/{cart}', [CartController::class, 'remove'])->name('cart.remove');
-    Route::delete('/cart/clear', [CartController::class, 'clear'])->name('cart.clear');
     Route::get('/checkout', [OrderController::class, 'checkout'])->name('checkout');
+
+    Route::get('/payment/momo', [PaymentController::class, 'momo'])->name('payment.momo');
+    Route::get('/payment/vnpay', [PaymentController::class, 'vnpay'])->name('payment.vnpay');
 });

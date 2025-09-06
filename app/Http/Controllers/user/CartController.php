@@ -19,79 +19,59 @@ class CartController extends Controller
         return view('user.cart', compact('cartItems'));
     }
 
-    public function store(Request $request, Product $product)
+    public function store(Product $product, Request $request)
     {
-        $quantity = max(1, (int) $request->input('quantity'));
-        $size = $request->input('size') ?? null;
+        $cart = Cart::firstOrCreate(
+            [
+                'user_id' => Auth::id(),
+                'product_id' => $product->id,
+                'size' => $request->size ?? null
+            ],
+            [
+                'quantity' => 0
+            ]
+        );
 
-        $existing = Auth::user()->cart()
-            ->wherePivot('size', $size)
-            ->where('product_id', $product->id)
-            ->first();
+        $cart->quantity += $request->quantity ?? 1;
+        $cart->save();
 
-        if ($existing) {
-            $newQty = $existing->pivot->quantity + $quantity;
-            Auth::user()->cart()->updateExistingPivot($product->id, [
-                'quantity' => $newQty,
-                'size' => $size
-            ]);
-        } else {
-            Auth::user()->cart()->attach($product->id, [
-                'quantity' => $quantity,
-                'size' => $size
-            ]);
-        }
-
-        return back()->with('success', 'Đã thêm sản phẩm vào giỏ hàng!');
+        return back()->with('success', 'Đã thêm vào giỏ hàng');
     }
 
     public function update(Request $request, Cart $cart)
     {
-        $action = $request->input('action');
-        $newSize = $request->input('size');
-
-        if ($newSize) {
-            $existing = Cart::where('user_id', Auth::id())
-                ->where('product_id', $cart->product_id)
-                ->where('size', $newSize)
-                ->where('id', '!=', $cart->id)
-                ->first();
-
-            if ($existing) {
-                $existing->quantity += $cart->quantity;
-                $existing->save();
-                $cart->delete();
-                $cart = $existing;
-            } else {
-                $cart->size = $newSize;
-                $cart->save();
-            }
+        if ($cart->user_id !== Auth::id()) {
+            abort(403);
         }
 
-        if ($action === 'increase') {
-            $cart->quantity++;
-        } elseif ($action === 'decrease') {
-            $cart->quantity = max(1, $cart->quantity - 1);
+        if ($request->has('size')) {
+            $cart->size = $request->size;
+        }
+
+        if ($request->has('quantity')) {
+            $cart->quantity = max(1, (int) $request->quantity);
         }
 
         $cart->save();
 
+        $subtotal = $cart->product->price * $cart->quantity;
+
         return response()->json([
+            'success' => true,
             'quantity' => $cart->quantity,
-            'subtotal' => $cart->product->price * $cart->quantity
+            'subtotal' => $subtotal,
+            'subtotal_formatted' => number_format($subtotal) . ' VNĐ'
         ]);
     }
 
-
     public function remove(Cart $cart)
     {
-        $cart->delete();
-        return back()->with('success', 'Đã xóa sản phẩm khỏi giỏ.');
-    }
+        if ($cart->user_id !== Auth::id()) {
+            abort(403);
+        }
 
-    public function clear()
-    {
-        Cart::where('user_id', Auth::id())->delete();
-        return back()->with('success', 'Đã xóa toàn bộ giỏ hàng.');
+        $cart->delete();
+
+        return response()->json(['success' => true]);
     }
 }

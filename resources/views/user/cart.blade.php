@@ -13,6 +13,7 @@
     <link rel="stylesheet"
         href="https://fonts.googleapis.com/css2?family=Roboto:wght@100;200;300;400;500;700;900&display=swap">
     <link rel="stylesheet" href="{{ asset('home/assets/css/fontawesome.min.css') }}">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 </head>
 
 <body>
@@ -139,24 +140,18 @@
             <div class="card shadow-sm">
                 <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                     <h5 class="mb-0"><i class="fa fa-shopping-cart me-2"></i> Giỏ hàng của bạn</h5>
-                    @if($cartItems->count())
-                        <form method="POST" action="{{ route('cart.clear') }}">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="btn btn-sm btn-light text-danger">
-                                <i class="fa fa-trash"></i> Xóa tất cả
-                            </button>
-                        </form>
-                    @endif
                 </div>
-                <div class="card-body">
-                    @if($cartItems->isEmpty())
+
+                @if($cartItems->isEmpty())
+                    <div class="card-body">
                         <p class="text-muted text-center">Giỏ hàng của bạn đang trống.</p>
-                    @else
-                        <form method="POST" action="{{ route('checkout') }}" id="cart-form">
-                            @csrf
-                            <div class="table-responsive">
-                                <table class="table table-bordered align-middle text-center">
+                    </div>
+                @else
+                    <form method="POST" action="{{ route('checkout') }}" id="cart-form">
+                        @csrf
+                        <div class="card-body p-0">
+                            <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
+                                <table class="table table-bordered align-middle text-center mb-0">
                                     <thead class="table-light">
                                         <tr>
                                             <th><input type="checkbox" id="select-all"></th>
@@ -182,36 +177,34 @@
                                                         <input type="checkbox" name="selected[]" value="{{ $cart->id }}"
                                                             class="cart-checkbox" data-price="{{ $subtotal }}">
                                                     </td>
-                                                    <td><img src="{{ asset('storage/' . $product->image) }}" width="60"
-                                                            class="rounded"></td>
+                                                    <td><img src="{{ asset($product->image) }}" width="60" class="rounded"></td>
                                                     <td>{{ $product->name }}</td>
                                                     <td>
-                                                        <select name="size" class="form-select form-select-sm size-select">
+                                                        <select class="form-select form-select-sm size-select"
+                                                            data-id="{{ $cart->id }}">
                                                             @foreach($sizes as $size)
                                                                 <option value="{{ $size }}" {{ $cart->size == $size ? 'selected' : '' }}>
-                                                                    {{ $size }}</option>
+                                                                    {{ $size }}
+                                                                </option>
                                                             @endforeach
                                                         </select>
                                                     </td>
                                                     <td>
                                                         <div class="d-flex justify-content-center align-items-center">
-                                                            <button type="button"
-                                                                class="btn btn-sm btn-success me-2 btn-decrease">-</button>
+                                                            <button type="button" class="btn btn-sm btn-success me-2 btn-decrease"
+                                                                data-id="{{ $cart->id }}">-</button>
                                                             <span
                                                                 class="badge bg-secondary px-3 quantity-display">{{ $cart->quantity }}</span>
-                                                            <button type="button"
-                                                                class="btn btn-sm btn-success ms-2 btn-increase">+</button>
+                                                            <button type="button" class="btn btn-sm btn-success ms-2 btn-increase"
+                                                                data-id="{{ $cart->id }}">+</button>
                                                         </div>
                                                     </td>
                                                     <td class="fw-bold subtotal">{{ number_format($subtotal) }} VNĐ</td>
                                                     <td>
-                                                        <form method="POST" action="{{ route('cart.remove', $cart->id) }}">
-                                                            @csrf
-                                                            @method('DELETE')
-                                                            <button class="btn btn-sm btn-danger" title="Xóa sản phẩm này">
-                                                                <i class="fa fa-times"></i>
-                                                            </button>
-                                                        </form>
+                                                        <button type="button" class="btn btn-sm btn-danger btn-remove-item"
+                                                            data-id="{{ $cart->id }}">
+                                                            <i class="fa fa-times"></i>
+                                                        </button>
                                                     </td>
                                                 </tr>
                                             @else
@@ -223,19 +216,33 @@
                                     </tbody>
                                 </table>
                             </div>
+                        </div>
+                        <div class="mt-3 text-end">
+                            <h5>Tổng tiền đã chọn: <span id="selected-total" class="text-success">0 VNĐ</span></h5>
+                            <form action="{{ route('checkout') }}" method="GET">
+                                @foreach($cartItems as $item)
+                                    <input type="checkbox" name="selected[]" value="{{ $item->id }}" checked hidden>
+                                @endforeach
+                                <div class="mb-2">
+                                    <label for="payment-method" class="form-label">Chọn phương thức thanh toán:</label>
+                                    <select name="payment_method" id="payment-method"
+                                        class="form-select w-auto d-inline-block">
+                                        <option value="momo">Momo</option>
+                                        <option value="vnpay">VNPay</option>
+                                    </select>
+                                </div>
 
-                            <div class="text-end mt-3">
-                                <h5>Tổng tiền đã chọn: <span id="selected-total" class="text-success">0 VNĐ</span></h5>
                                 <button type="submit" class="btn btn-success mt-2">
-                                    <i class="fa fa-credit-card"></i> Thanh toán sản phẩm đã chọn
+                                    <i class="fa fa-credit-card"></i> Thanh toán
                                 </button>
-                            </div>
-                        </form>
-                    @endif
-                </div>
+                            </form>
+                        </div>
+                    </form>
+                @endif
             </div>
         </div>
     </div>
+
     <!-- Start Footer -->
     <footer class="bg-dark" id="tempaltemo_footer">
         <div class="container">
@@ -333,7 +340,6 @@
                 </div>
             </div>
         </div>
-
     </footer>
     <!-- End Footer -->
     <!-- Start Script -->
@@ -343,78 +349,7 @@
     <script src="{{ asset('home/assets/js/custom.js') }}"></script>
     <script src="{{ asset('home/assets/js/templatemo.js') }}"></script>
     <script src="{{ asset('home/assets/js/sort.js') }}"></script>
-    <script>
-document.addEventListener('DOMContentLoaded', function () {
-    const checkboxes = document.querySelectorAll('.cart-checkbox');
-    const totalDisplay = document.getElementById('selected-total');
-    const selectAll = document.getElementById('select-all');
-
-    function updateTotal() {
-        let total = 0;
-        checkboxes.forEach(cb => {
-            if (cb.checked) {
-                total += parseInt(cb.dataset.price);
-            }
-        });
-        totalDisplay.textContent = total.toLocaleString() + ' VNĐ';
-    }
-
-    checkboxes.forEach(cb => cb.addEventListener('change', updateTotal));
-    selectAll.addEventListener('change', () => {
-        checkboxes.forEach(cb => cb.checked = selectAll.checked);
-        updateTotal();
-    });
-
-    document.querySelectorAll('.btn-increase, .btn-decrease').forEach(btn => {
-        btn.addEventListener('click', function () {
-            const row = this.closest('tr');
-            const cartId = row.dataset.cartId;
-            const quantityDisplay = row.querySelector('.quantity-display');
-            const action = this.classList.contains('btn-increase') ? 'increase' : 'decrease';
-
-            fetch(`/cart/${cartId}`, {
-                method: 'PATCH',
-                headers: {
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ action })
-            })
-            .then(res => res.json())
-            .then(data => {
-                quantityDisplay.textContent = data.quantity;
-                row.querySelector('.subtotal').textContent = data.subtotal.toLocaleString() + ' VNĐ';
-                row.querySelector('.cart-checkbox').dataset.price = data.subtotal;
-                updateTotal();
-            });
-        });
-    });
-
-    document.querySelectorAll('.size-select').forEach(select => {
-        select.addEventListener('change', function () {
-            const row = this.closest('tr');
-            const cartId = row.dataset.cartId;
-            const newSize = this.value;
-
-            fetch(`/cart/${cartId}`, {
-                method: 'PATCH',
-                headers: {
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ size: newSize })
-            })
-            .then(res => res.json())
-            .then(data => {
-                row.querySelector('.quantity-display').textContent = data.quantity;
-                row.querySelector('.subtotal').textContent = data.subtotal.toLocaleString() + ' VNĐ';
-                row.querySelector('.cart-checkbox').dataset.price = data.subtotal;
-                updateTotal();
-            });
-        });
-    });
-});
-</script>
+    <script src="{{ asset('home/assets/js/cartAJAX.js') }}"></script>
 </body>
 
 </html>
