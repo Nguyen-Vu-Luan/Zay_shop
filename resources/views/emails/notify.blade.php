@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html>
-
+<head>
+    <meta charset="utf-8">
+    <title>{{ $subjectText }}</title>
+</head>
 <body>
     <h2>{{ $subjectText }}</h2>
     <p>{{ $messageContent }}</p>

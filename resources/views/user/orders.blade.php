@@ -135,52 +135,87 @@
     </nav>
     <!-- Close Header -->
     <div class="row">
-        <div class="col-md-10 mx-auto">
-            <div class="card shadow-sm">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0"><i class="fa fa-shopping-bag me-2"></i> Đơn hàng của tôi</h5>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-bordered align-middle text-center">
-                            <thead class="table-light">
+    <div class="col-md-10 mx-auto">
+        <div class="card shadow-sm border-0 rounded-3">
+            <div class="card-header bg-primary text-white rounded-top-3">
+                <h5 class="mb-0">
+                    <i class="fa fa-shopping-bag me-2"></i> Đơn hàng của tôi
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle text-center">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Mã đơn</th>
+                                <th>Tổng tiền</th>
+                                <th>Trạng thái</th>
+                                <th>Ngày đặt</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($orders as $order)
                                 <tr>
-                                    <th>Mã đơn</th>
-                                    <th>Tổng tiền</th>
-                                    <th>Trạng thái</th>
-                                    <th>Ngày đặt</th>
+                                    <td><strong>{{ $order->order_code }}</strong></td>
+                                    <td class="text-success fw-bold">
+                                        {{ number_format($order->total_price) }} VNĐ
+                                    </td>
+                                    <td>
+                                        @if($order->status === 'pending')
+                                            <span class="badge bg-warning text-dark rounded-pill px-3 py-2">
+                                                <i class="fa fa-clock me-1"></i> Chưa thanh toán
+                                            </span>
+                                        @elseif($order->status === 'paid')
+                                            <span class="badge bg-success rounded-pill px-3 py-2">
+                                                <i class="fa fa-check me-1"></i> Đã thanh toán
+                                            </span>
+                                        @elseif($order->status === 'cancelled')
+                                            <span class="badge bg-danger rounded-pill px-3 py-2">
+                                                <i class="fa fa-times me-1"></i> Đã hủy
+                                            </span>
+                                        @else
+                                            <span class="badge bg-secondary rounded-pill px-3 py-2">
+                                                {{ $order->status }}
+                                            </span>
+                                        @endif
+                                    </td>
+                                    <td>{{ $order->created_at->format('d/m/Y') }}</td>
+                                    <td>
+                                        @if($order->status === 'pending')
+                                            <div class="d-flex gap-2 justify-content-center">
+                                                {{-- Nút thanh toán --}}
+                                                <a href="{{ route('orders.pay.again', $order->id) }}"
+                                                    class="btn btn-success btn-sm d-flex align-items-center gap-1 rounded-pill px-3">
+                                                    <i class="fa fa-credit-card"></i> Thanh toán
+                                                </a>
+
+                                                {{-- Nút hủy --}}
+                                                <form action="{{ route('orders.cancel', $order->id) }}" method="POST"
+                                                    onsubmit="return confirm('Bạn có chắc muốn hủy đơn hàng này?')">
+                                                    @csrf
+                                                    @method('PATCH')
+                                                    <button type="submit"
+                                                        class="btn btn-outline-danger btn-sm d-flex align-items-center gap-1 rounded-pill px-3">
+                                                        <i class="fa fa-times"></i> Hủy
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        @else
+                                            <em class="text-muted">—</em>
+                                        @endif
+                                    </td>
                                 </tr>
-                            </thead>
-                            <tbody>
-                                @forelse($orders as $order)
-                                    <tr>
-                                        <td><strong>#{{ $order->id }}</strong></td>
-                                        <td class="text-success">{{ number_format($order->total_price) }} VNĐ</td>
-                                        <td>
-                                            @if($order->status === 'pending')
-                                                <span class="badge bg-warning text-dark">Đang xử lý</span>
-                                            @elseif($order->status === 'completed')
-                                                <span class="badge bg-success">Hoàn tất</span>
-                                            @elseif($order->status === 'cancelled')
-                                                <span class="badge bg-danger">Đã hủy</span>
-                                            @else
-                                                <span class="badge bg-secondary">{{ $order->status }}</span>
-                                            @endif
-                                        </td>
-                                        <td>{{ $order->created_at->format('d/m/Y') }}</td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="4" class="text-muted">Bạn chưa có đơn hàng nào.</td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
+                            @endforeach
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
     </div>
+</div>
+
+
 
     <!-- Start Footer -->
     <footer class="bg-dark" id="tempaltemo_footer">

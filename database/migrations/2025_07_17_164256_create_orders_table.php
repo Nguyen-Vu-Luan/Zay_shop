@@ -12,16 +12,13 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('orders', function (Blueprint $table) {
-            $table->id();
-            $table->unsignedBigInteger('user_id');
-            $table->decimal('total_price', 10, 2);
-            $table->string('status')->default('pending'); // pending, confirmed, shipped, cancelled
-            $table->string('payment_status')->default('pending'); // pending, success, failed
-            $table->string('payment_method')->nullable(); // cod, momo, etc
-            $table->enum('status', ['pending', 'confirmed', 'shipped', 'completed', 'cancelled'])->default('pending');
-            $table->timestamps();
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
-        });
+        $table->id();
+        $table->string('order_id')->unique();
+        $table->integer('amount');
+        $table->json('cart_items')->nullable();
+        $table->string('status')->default('pending'); // pending, paid, failed
+        $table->timestamps();
+    });
     }
 
     /**

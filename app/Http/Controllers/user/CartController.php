@@ -16,16 +16,29 @@ class CartController extends Controller
             ->where('user_id', Auth::id())
             ->get();
 
-        return view('user.cart', compact('cartItems'));
+        $total = 0;
+
+        foreach ($cartItems as $item) {
+            $price = $item->product->price;
+
+            // Nếu có giảm giá thì tính giá sau giảm
+            if (!empty($item->product->discount) && $item->product->discount > 0) {
+                $price = $price * (1 - $item->product->discount / 100);
+            }
+
+            $total += $price * $item->quantity;
+        }
+
+        return view('user.cart', compact('cartItems', 'total'));
     }
 
     public function store(Product $product, Request $request)
     {
         $cart = Cart::firstOrCreate(
             [
-                'user_id' => Auth::id(),
+                'user_id'   => Auth::id(),
                 'product_id' => $product->id,
-                'size' => $request->size ?? null
+                'size'      => $request->size ?? null
             ],
             [
                 'quantity' => 0
@@ -38,11 +51,9 @@ class CartController extends Controller
         return back()->with('success', 'Đã thêm vào giỏ hàng');
     }
 
-    public function update(Request $request, Cart $cart)
+    public function update(Request $request, $id)
     {
-        if ($cart->user_id !== Auth::id()) {
-            abort(403);
-        }
+        $cart = Cart::with('product')->findOrFail($id);
 
         if ($request->has('size')) {
             $cart->size = $request->size;
@@ -54,13 +65,22 @@ class CartController extends Controller
 
         $cart->save();
 
-        $subtotal = $cart->product->price * $cart->quantity;
+        $product = $cart->product;
+
+        $discountedPrice = $product->discount > 0
+            ? $product->price * (1 - $product->discount / 100)
+            : $product->price;
+
+        $subtotalOriginal = $product->price * $cart->quantity;
+        $subtotalDiscounted = $discountedPrice * $cart->quantity;
 
         return response()->json([
             'success' => true,
             'quantity' => $cart->quantity,
-            'subtotal' => $subtotal,
-            'subtotal_formatted' => number_format($subtotal) . ' VNĐ'
+            'subtotal_original' => $subtotalOriginal,
+            'subtotal_discounted' => $subtotalDiscounted,
+            'subtotal_original_formatted' => number_format($subtotalOriginal) . ' VNĐ',
+            'subtotal_discounted_formatted' => number_format($subtotalDiscounted) . ' VNĐ',
         ]);
     }
 

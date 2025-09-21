@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // Xóa tất cả
     document.querySelector('.btn-clear-cart')?.addEventListener('click', function () {
         if (confirm('Bạn có chắc muốn xóa tất cả sản phẩm?')) {
-            fetch("{{ route('cart.clear') }}", {
+            fetch("/cart/clear", {
                 method: 'DELETE',
                 headers: { 'X-CSRF-TOKEN': csrfToken }
             }).then(res => res.json()).then(data => {
@@ -42,46 +42,42 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-
-    // Đổi size
-    document.querySelectorAll('.size-select').forEach(select => {
-        select.addEventListener('change', function () {
-            const id = this.dataset.id;
-            fetch(`/cart/${id}`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken },
-                body: JSON.stringify({ size: this.value })
-            });
-        });
-    });
-
-    // Tăng/giảm số lượng
-    function updateQuantity(id, change) {
-        const row = document.querySelector(`tr[data-cart-id="${id}"]`);
-        const qtyDisplay = row.querySelector('.quantity-display');
-        let qty = parseInt(qtyDisplay.textContent) + change;
-        if (qty < 1) return;
-
+    // Cập nhật số lượng (tăng/giảm)
+    function updateQuantityOrSize(id, payload) {
         fetch(`/cart/${id}`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken },
-            body: JSON.stringify({ quantity: qty })
+            body: JSON.stringify(payload)
         }).then(res => res.json()).then(data => {
             if (data.success) {
-                qtyDisplay.textContent = data.quantity;
-                row.querySelector('.subtotal').textContent = data.subtotal_formatted;
-                row.querySelector('.cart-checkbox').dataset.price = data.subtotal;
+                const row = document.querySelector(`tr[data-cart-id="${id}"]`);
+                row.querySelector('.quantity-display').textContent = data.quantity;
+
+                const originalEl = row.querySelector('.subtotal-original');
+                const discountedEl = row.querySelector('.subtotal-discounted');
+
+                if (originalEl) originalEl.textContent = data.subtotal_original_formatted;
+                if (discountedEl) discountedEl.textContent = data.subtotal_discounted_formatted;
+
+                row.querySelector('.cart-checkbox').dataset.price = data.subtotal_discounted;
                 updateSelectedTotal();
             }
         });
     }
 
     document.querySelectorAll('.btn-increase').forEach(btn => {
-        btn.addEventListener('click', () => updateQuantity(btn.dataset.id, 1));
+        btn.addEventListener('click', () => updateQuantityOrSize(btn.dataset.id, { quantity: parseInt(btn.closest('tr').querySelector('.quantity-display').textContent) + 1 }));
     });
 
     document.querySelectorAll('.btn-decrease').forEach(btn => {
-        btn.addEventListener('click', () => updateQuantity(btn.dataset.id, -1));
+        btn.addEventListener('click', () => updateQuantityOrSize(btn.dataset.id, { quantity: parseInt(btn.closest('tr').querySelector('.quantity-display').textContent) - 1 }));
+    });
+
+    // Đổi size
+    document.querySelectorAll('.size-select').forEach(select => {
+        select.addEventListener('change', function () {
+            updateQuantityOrSize(this.dataset.id, { size: this.value });
+        });
     });
 
     // Tính tổng tiền đã chọn
@@ -100,5 +96,16 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('select-all')?.addEventListener('change', function () {
         document.querySelectorAll('.cart-checkbox').forEach(cb => cb.checked = this.checked);
         updateSelectedTotal();
+    });
+
+    updateSelectedTotal();
+
+    // Ngăn submit nếu chưa chọn sản phẩm
+    document.getElementById('cart-form')?.addEventListener('submit', function (e) {
+        const checked = document.querySelectorAll('.cart-checkbox:checked').length;
+        if (checked === 0) {
+            e.preventDefault();
+            alert('Vui lòng chọn ít nhất 1 sản phẩm để thanh toán.');
+        }
     });
 });

@@ -7,7 +7,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\NotifyUserMail;
 
 class UserProfileController extends Controller
 {
@@ -28,7 +29,13 @@ class UserProfileController extends Controller
 
         $user->update($request->only(['name', 'email']));
 
-        return back()->with('success', 'Cập nhật thông tin thành công!');
+        // Gửi email thông báo
+        $subject = 'Thông tin tài khoản đã được cập nhật';
+        $message = "Xin chào {$user->name},\n\nThông tin tài khoản của bạn vừa được cập nhật.";
+
+        Mail::to($user->email)->send(new NotifyUserMail($subject, $message));
+
+        return back()->with('success', 'Cập nhật thông tin thành công! Email đã được gửi.');
     }
 
     public function updatePassword(Request $request)
@@ -42,29 +49,12 @@ class UserProfileController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
-        return back()->with('success', 'Đổi mật khẩu thành công!');
-    }
+        // Gửi email thông báo
+        $subject = 'Mật khẩu tài khoản đã được thay đổi';
+        $message = "Xin chào {$user->name},\n\nMật khẩu tài khoản của bạn vừa được thay đổi. Nếu không phải bạn thực hiện, vui lòng liên hệ ngay với bộ phận hỗ trợ.";
 
-    public function updateAvatar(Request $request)
-    {
-        $request->validate([
-            'avatar' => 'required|image|mimes:jpg,jpeg,png|max:2048',
-        ]);
+        Mail::to($user->email)->send(new NotifyUserMail($subject, $message));
 
-        $user = Auth::user();
-
-        // Xóa avatar cũ nếu có
-        if ($user->avatar && Storage::exists($user->avatar)) {
-            Storage::delete($user->avatar);
-        }
-
-        // Lưu avatar mới
-        $path = $request->file('avatar')->store('avatars', 'public');
-
-        $user->update([
-            'avatar' => $path,
-        ]);
-
-        return back()->with('success', 'Cập nhật ảnh đại diện thành công!');
+        return back()->with('success', 'Đổi mật khẩu thành công! Email đã được gửi.');
     }
 }

@@ -46,4 +46,6 @@ class ShopController extends Controller
             'lastPage'     => $products->lastPage(),
         ]);
     }
+
+    
 }
