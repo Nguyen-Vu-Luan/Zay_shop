@@ -7,6 +7,9 @@ use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\View;
 use App\Models\Product;
 use App\Models\Category;
+use Illuminate\Support\Facades\Auth;
+use App\Models\Message;
+
 
 
 class AppServiceProvider extends ServiceProvider
@@ -31,6 +34,20 @@ class AppServiceProvider extends ServiceProvider
                 'brands' => $brands,
                 'categories' => $categories,
             ]);
+        });
+
+        View::composer('chat.popup', function ($view) {
+            $messages = collect();
+
+            if (Auth::check() && Auth::id() != 1) {
+                $messages = Message::where(function ($q) {
+                    $q->where('from_id', Auth::id())->where('to_id', 1);
+                })->orWhere(function ($q) {
+                    $q->where('from_id', 1)->where('to_id', Auth::id());
+                })->orderBy('created_at', 'asc')->get();
+            }
+
+            $view->with('messages', $messages);
         });
     }
 }

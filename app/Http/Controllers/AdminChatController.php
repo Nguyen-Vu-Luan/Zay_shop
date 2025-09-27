@@ -2,43 +2,65 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use App\Models\User;
 use App\Models\Message;
 use App\Events\MessageSent;
-use App\Models\User;
-use Illuminate\Http\Request;
 
 class AdminChatController extends Controller
 {
+    // Danh sách user chat
     public function index()
     {
-        $users = User::where('id', '!=', 1)->get();
-        return view('chat.admin_index', compact('users'));
+        $admin = Auth::user();
+        if (!$admin || $admin->role !== 'admin') {
+            Auth::logout();
+            return redirect()->route('admin.login');
+        }
+
+        $users = User::all(); // Hoặc lọc những user đã chat nếu muốn
+        return view('admin.chat.index', compact('users'));
     }
 
+    // Lấy tin nhắn với user
     public function chat($userId)
     {
-        $messages = Message::where(function ($q) use ($userId) {
-            $q->where('from_id', $userId)->where('to_id', 1);
-        })
-            ->orWhere(function ($q) use ($userId) {
-                $q->where('from_id', 1)->where('to_id', $userId);
-            })
-            ->orderBy('created_at')
-            ->get();
+        $admin = Auth::user();
+        $user = User::findOrFail($userId);
 
-        return view('chat.admin_chat', compact('messages', 'userId'));
+        $messages = Message::where(function ($q) use ($userId, $admin) {
+            $q->where('from_id', $userId)->where('to_id', $admin->id);
+        })->orWhere(function ($q) use ($userId, $admin) {
+            $q->where('from_id', $admin->id)->where('to_id', $userId);
+        })->orderBy('created_at')->get();
+
+        return response()->json([
+            'messages' => $messages->map(function ($msg) use ($user, $admin) {
+                return [
+                    'from_id' => $msg->from_id,
+                    'from_name' => $msg->from_id == $admin->id ? 'You' : $user->name,
+                    'message' => $msg->message
+                ];
+            })
+        ]);
     }
 
+    // Gửi tin nhắn
     public function send(Request $request, $userId)
     {
-        $msg = Message::create([
-            'from_id' => 1, // admin id
+        $admin = Auth::user();
+        $request->validate(['message' => 'required|string']);
+
+        $message = Message::create([
+            'from_id' => $admin->id,
             'to_id' => $userId,
-            'message' => $request->message,
+            'message' => $request->message
         ]);
 
-        broadcast(new MessageSent($msg))->toOthers();
+        broadcast(new MessageSent($message))->toOthers();
 
-        return response()->json(['status' => 'ok']);
+        return response()->json(['success' => true]);
     }
 }

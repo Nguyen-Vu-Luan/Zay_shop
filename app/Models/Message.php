@@ -9,13 +9,19 @@ class Message extends Model
 {
     use HasFactory;
 
+    use HasFactory;
+
     protected $fillable = ['from_id', 'to_id', 'message'];
 
-    public function sender() {
+    // Người gửi
+    public function fromUser()
+    {
         return $this->belongsTo(User::class, 'from_id');
     }
 
-    public function receiver() {
+    // Người nhận
+    public function toUser()
+    {
         return $this->belongsTo(User::class, 'to_id');
     }
 }

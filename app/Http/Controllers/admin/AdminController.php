@@ -3,32 +3,35 @@
 namespace App\Http\Controllers\admin;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Product;
 use App\Models\Order;
+use App\Models\Review;
 
 class AdminController extends Controller
 {
     public function index()
     {
-        if (!auth()->check()) {
-            return redirect()->route('login')->with('error', 'Vui lòng đăng nhập để truy cập!');
-        }
+        $user = Auth::user();
 
-        if (auth()->user()->role !== 'admin') {
-            return redirect()->route('login')->with('error', 'Bạn không có quyền truy cập Admin!');
+        // Chỉ admin mới được xem
+        if (!$user || $user->role !== 'admin') {
+            Auth::logout();
+            return redirect()->route('admin.login')
+                ->withErrors(['email' => 'Bạn phải đăng nhập bằng tài khoản Admin.']);
         }
 
         $stats = [
-            'users' => User::count(),
+            'users'    => User::count(),
             'products' => Product::count(),
-            'orders' => Order::count(),
-            'revenue' => Order::sum('total_price'),
+            'orders'   => Order::count(),
+            'revenue'  => Order::where('status', 'completed')->sum('total_price'),
         ];
+
         return view('admin.dashboard', compact('stats'));
     }
-
 
     /* ================= USER CRUD ================= */
     public function users()
@@ -172,5 +175,17 @@ class AdminController extends Controller
     {
         Order::destroy($id);
         return redirect()->route('admin.orders')->with('success', 'Xóa đơn hàng thành công!');
+    }
+
+    public function comments()
+    {
+        $comments = Review::with('user', 'product')->orderBy('created_at', 'desc')->get();
+        return view('admin.comments.index', compact('comments'));
+    }
+
+    public function deleteComment($id)
+    {
+        Review::destroy($id);
+        return redirect()->route('admin.comments')->with('success', 'Xóa comment thành công!');
     }
 }

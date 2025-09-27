@@ -1,0 +1,110 @@
+/* --- Review Section --- */
+#reviewsCarousel {
+    max-width: 900px;
+    margin: auto;
+}
+
+/* Card review */
+.review-card {
+    background: #fff;
+    border-radius: 20px;
+    padding: 25px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: 1px solid #eee;
+}
+
+.review-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+}
+
+/* Avatar user */
+.review-user img {
+    border: 2px solid #f1f1f1;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* User info */
+.review-user h6 {
+    font-weight: 600;
+    color: #333;
+}
+
+.review-user small {
+    font-size: 13px;
+    color: #999;
+}
+
+/* Rating stars */
+.review-rating i {
+    font-size: 18px;
+    margin-right: 2px;
+}
+
+/* Comment */
+.review-comment {
+    font-size: 15px;
+    color: #555;
+    line-height: 1.6;
+}
+
+/* Carousel button */
+.carousel-control-prev-icon,
+.carousel-control-next-icon {
+    filter: invert(1);
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+}
+
+.carousel-control-prev-icon {
+    background-color: rgba(0, 0, 0, 0.6);
+}
+
+.carousel-control-next-icon {
+    background-color: rgba(0, 0, 0, 0.6);
+}
+
+/* Tiêu đề */
+.review-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: #222;
+    letter-spacing: 0.5px;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+}
+
+.custom-nav-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.6);
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    z-index: 10;
+    transition: all 0.3s ease;
+}
+
+.custom-nav-btn:hover {
+    background: rgba(0, 0, 0, 0.85);
+    color: #ffc107;
+}
+
+.carousel-control-prev.custom-nav-btn {
+    left: -20px; /* đẩy ra ngoài 1 chút */
+}
+
+.carousel-control-next.custom-nav-btn {
+    right: -20px;
+}
+
+.custom-nav-btn i {
+    font-size: 16px;
+}

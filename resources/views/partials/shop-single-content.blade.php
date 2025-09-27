@@ -143,4 +143,60 @@
         </div>
     </div>
 </section>
+<!-- Reviews Section -->
+@if($product->reviews->count() > 0)
+    <section class="container my-5">
+        <h4 class="mb-4 text-center fw-bold">
+            <i class="fa fa-star text-warning me-2"></i> Đánh giá sản phẩm
+        </h4>
+
+        <div id="reviewsCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="5000">
+            <div class="carousel-inner">
+                @foreach($product->reviews->chunk(2) as $chunkIndex => $chunk)
+                    <div class="carousel-item {{ $chunkIndex == 0 ? 'active' : '' }}">
+                        <div class="row justify-content-center">
+                            @foreach($chunk as $review)
+                                <div class="col-md-5 mb-3">
+                                    <div class="card shadow-sm border-0 rounded-4 h-100 p-4">
+                                        {{-- Header user --}}
+                                        <div class="d-flex align-items-center mb-3">
+                                            <img src="https://ui-avatars.com/api/?name={{ urlencode($review->user->name ?? 'User') }}&background=random&size=50"
+                                                class="rounded-circle me-3 border" width="50" height="50" alt="avatar">
+                                            <div>
+                                                <h6 class="mb-0 fw-bold">{{ $review->user->name ?? 'Người dùng ẩn danh' }}</h6>
+                                                <small class="text-muted">{{ $review->created_at->format('d/m/Y H:i') }}</small>
+                                            </div>
+                                        </div>
+
+                                        {{-- Rating stars --}}
+                                        <div class="mb-2">
+                                            @for ($i = 1; $i <= 5; $i++)
+                                                <i
+                                                    class="fa fa-star {{ $i <= $review->rating ? 'text-warning' : 'text-secondary' }}"></i>
+                                            @endfor
+                                        </div>
+
+                                        {{-- Comment --}}
+                                        <p class="text-muted fst-italic">“{{ $review->comment }}”</p>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+
+            {{-- Nút điều hướng --}}
+            <button class="carousel-control-prev custom-nav-btn" type="button" data-bs-target="#reviewsCarousel"
+                data-bs-slide="prev">
+                <i class="fa fa-chevron-left"></i>
+            </button>
+            <button class="carousel-control-next custom-nav-btn" type="button" data-bs-target="#reviewsCarousel"
+                data-bs-slide="next">
+                <i class="fa fa-chevron-right"></i>
+            </button>
+
+        </div>
+    </section>
+@endif
 <!-- Close Content -->

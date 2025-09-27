@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-
+use App\Models\Review;
 class Product extends Model
 {
     protected $fillable = ['name', 'price', 'category_id', 'gender', 'discount'];
@@ -36,5 +36,10 @@ class Product extends Model
             return $this->price - ($this->price * $this->discount / 100);
         }
         return $this->price;
+    }
+    
+    public function averageRating()
+    {
+        return $this->reviews()->avg('rating');
     }
 }

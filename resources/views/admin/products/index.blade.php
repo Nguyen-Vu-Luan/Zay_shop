@@ -1,9 +1,8 @@
 @extends('layouts.admin')
 
-@section('title', 'Quản lý sản phẩm')
+@section('title', 'Product')
 
 @section('content')
-    <h2>Danh sách sản phẩm</h2>
     <a href="{{ route('admin.products.create') }}" class="btn btn-success mb-3">+ Thêm Sản phẩm</a>
 
     @if(session('success'))

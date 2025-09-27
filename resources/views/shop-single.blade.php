@@ -15,6 +15,7 @@
     <link rel="stylesheet" href="{{ asset('home/assets/css/fontawesome.min.css') }}">
     <link rel="stylesheet" type="text/css" href="{{ asset('home/assets/css/slick.min.css') }}">
     <link rel="stylesheet" type="text/css" href="{{ asset('home/assets/css/slick-theme.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ asset('home/assets/css/shop-single-review.css') }}">
 </head>
 
 <body>

@@ -1,10 +1,8 @@
 @extends('layouts.admin')
 
-@section('title', 'Quản lý đơn hàng')
+@section('title', 'Order')
 
 @section('content')
-    <h2>Danh sách đơn hàng</h2>
-
     @if(session('success'))
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif

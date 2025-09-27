@@ -1,9 +1,8 @@
 @extends('layouts.admin')
 
-@section('title', 'Quản lý người dùng')
+@section('title', 'User')
 
 @section('content')
-    <h2>Danh sách người dùng</h2>
     <a href="{{ route('admin.users.create') }}" class="btn btn-success mb-3">+ Thêm User</a>
 
     @if(session('success'))
